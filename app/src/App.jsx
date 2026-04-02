@@ -3,18 +3,19 @@ import mockImages from "./data/mockImages";
 import ImageCard from "./components/ImageCard";
 
 function App() {
+  const [images, setImages] = useState(mockImages);
   const [selectedGarmentType, setSelectedGarmentType] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("");
   const [searchText, setSearchText] = useState("");
   const [designerNotes, setDesignerNotes] = useState({});
 
   const garmentTypeOptions = useMemo(() => {
-    return [...new Set(mockImages.map((item) => item.garmentType))];
-  }, []);
+    return [...new Set(images.map((item) => item.garmentType))];
+  }, [images]);
 
   const styleOptions = useMemo(() => {
-    return [...new Set(mockImages.map((item) => item.style))];
-  }, []);
+    return [...new Set(images.map((item) => item.style))];
+  }, [images]);
 
   const handleNoteChange = (imageId, value) => {
     setDesignerNotes((prev) => ({
@@ -23,8 +24,48 @@ function App() {
     }));
   };
 
+  const handleImageUpload = (event) => {
+    const files = Array.from(event.target.files || []);
+
+    if (files.length === 0) {
+      return;
+    }
+
+    const newImages = files.map((file, index) => ({
+      id: Date.now() + index,
+      imageUrl: URL.createObjectURL(file),
+      description: `Uploaded image: ${file.name}`,
+      garmentType: "Unknown",
+      style: "Unknown",
+      material: "Unknown",
+      colorPalette: "Unknown",
+      pattern: "Unknown",
+      season: "Unknown",
+      occasion: "Unknown",
+      consumerProfile: "Unknown",
+      trendNotes: "Pending AI classification",
+      location: {
+        continent: "Unknown",
+        country: "Unknown",
+        city: "Unknown",
+      },
+      time: {
+        year: new Date().getFullYear(),
+        month: "Unknown",
+        seasonCaptured: "Unknown",
+      },
+      designer: "Current User",
+      annotations: [],
+    }));
+
+    setImages((prev) => [...newImages, ...prev]);
+
+    // reset input so the same file can be uploaded again if needed
+    event.target.value = "";
+  };
+
   const filteredImages = useMemo(() => {
-    return mockImages.filter((item) => {
+    return images.filter((item) => {
       const matchesGarmentType =
         !selectedGarmentType || item.garmentType === selectedGarmentType;
 
@@ -54,7 +95,7 @@ function App() {
 
       return matchesGarmentType && matchesStyle && matchesSearch;
     });
-  }, [selectedGarmentType, selectedStyle, searchText, designerNotes]);
+  }, [images, selectedGarmentType, selectedStyle, searchText, designerNotes]);
 
   return (
     <div
@@ -81,7 +122,15 @@ function App() {
 
       <section style={{ marginTop: "24px" }}>
         <h2>Upload</h2>
-        <p>Image upload area will go here.</p>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleImageUpload}
+        />
+        <p style={{ marginTop: "8px" }}>
+          Uploaded images will appear in the library with placeholder metadata.
+        </p>
       </section>
 
       <section style={{ marginTop: "24px" }}>
