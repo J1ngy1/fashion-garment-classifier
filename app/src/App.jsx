@@ -3,28 +3,34 @@ import mockImages from "./data/mockImages";
 import ImageCard from "./components/ImageCard";
 
 function App() {
-  // selected filter values
   const [selectedGarmentType, setSelectedGarmentType] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("");
   const [searchText, setSearchText] = useState("");
+  const [designerNotes, setDesignerNotes] = useState({});
 
-  // build garment type options from data
   const garmentTypeOptions = useMemo(() => {
     return [...new Set(mockImages.map((item) => item.garmentType))];
   }, []);
 
-  // build style options from data
   const styleOptions = useMemo(() => {
     return [...new Set(mockImages.map((item) => item.style))];
   }, []);
 
-  // apply filters + text search together
+  const handleNoteChange = (imageId, value) => {
+    setDesignerNotes((prev) => ({
+      ...prev,
+      [imageId]: value,
+    }));
+  };
+
   const filteredImages = useMemo(() => {
     return mockImages.filter((item) => {
       const matchesGarmentType =
         !selectedGarmentType || item.garmentType === selectedGarmentType;
 
       const matchesStyle = !selectedStyle || item.style === selectedStyle;
+
+      const designerNote = designerNotes[item.id] || "";
 
       const searchableText = `
         ${item.description}
@@ -40,6 +46,7 @@ function App() {
         ${item.location.country}
         ${item.location.city}
         ${item.designer}
+        ${designerNote}
       `.toLowerCase();
 
       const matchesSearch =
@@ -47,7 +54,7 @@ function App() {
 
       return matchesGarmentType && matchesStyle && matchesSearch;
     });
-  }, [selectedGarmentType, selectedStyle, searchText]);
+  }, [selectedGarmentType, selectedStyle, searchText, designerNotes]);
 
   return (
     <div
@@ -60,14 +67,17 @@ function App() {
     >
       <h1
         style={{
-          fontSize: "48px",
+          fontSize: "40px",
           lineHeight: 1.1,
           margin: 0,
         }}
       >
         Fashion Garment Classification & Inspiration App
       </h1>
-      <p>Upload, classify, search, and annotate inspiration images.</p>
+
+      <p style={{ marginTop: "12px" }}>
+        Upload, classify, search, and annotate inspiration images.
+      </p>
 
       <section style={{ marginTop: "24px" }}>
         <h2>Upload</h2>
@@ -151,14 +161,14 @@ function App() {
           }}
         >
           {filteredImages.map((item) => (
-            <ImageCard key={item.id} item={item} />
+            <ImageCard
+              key={item.id}
+              item={item}
+              noteValue={designerNotes[item.id] || ""}
+              onNoteChange={handleNoteChange}
+            />
           ))}
         </div>
-      </section>
-
-      <section style={{ marginTop: "24px" }}>
-        <h2>Annotations</h2>
-        <p>Designer notes and tags will go here.</p>
       </section>
     </div>
   );

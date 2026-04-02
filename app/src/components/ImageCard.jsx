@@ -1,4 +1,4 @@
-function ImageCard({ item }) {
+function ImageCard({ item, noteValue, onNoteChange }) {
   return (
     <div
       style={{
@@ -38,6 +38,33 @@ function ImageCard({ item }) {
         <p>
           <strong>Designer:</strong> {item.designer}
         </p>
+
+        <div
+          style={{
+            marginTop: "16px",
+            padding: "12px",
+            background: "#f7f7f7",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={{ marginTop: 0, marginBottom: "8px" }}>
+            <strong>Designer Note</strong>
+          </p>
+
+          <textarea
+            value={noteValue}
+            onChange={(e) => onNoteChange(item.id, e.target.value)}
+            placeholder="Add your own observation here"
+            rows={4}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              resize: "vertical",
+              padding: "8px",
+              fontFamily: "Arial, sans-serif",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
