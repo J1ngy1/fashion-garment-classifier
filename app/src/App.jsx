@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import mockImages from "./data/mockImages";
 import ImageCard from "./components/ImageCard";
+import { classifyImageFromName } from "./utils/classifyImage";
 
 function App() {
   const [images, setImages] = useState(mockImages);
@@ -34,6 +35,7 @@ function App() {
     const newImages = files.map((file, index) => ({
       id: Date.now() + index,
       imageUrl: URL.createObjectURL(file),
+      originalFileName: file.name,
       description: `Uploaded image: ${file.name}`,
       garmentType: "Unknown",
       style: "Unknown",
@@ -59,9 +61,24 @@ function App() {
     }));
 
     setImages((prev) => [...newImages, ...prev]);
-
-    // reset input so the same file can be uploaded again if needed
     event.target.value = "";
+  };
+
+  const handleRunDemoClassification = () => {
+    setImages((prev) =>
+      prev.map((item) => {
+        if (item.garmentType !== "Unknown") {
+          return item;
+        }
+
+        const result = classifyImageFromName(item.originalFileName || "");
+
+        return {
+          ...item,
+          ...result,
+        };
+      }),
+    );
   };
 
   const filteredImages = useMemo(() => {
@@ -122,14 +139,31 @@ function App() {
 
       <section style={{ marginTop: "24px" }}>
         <h2>Upload</h2>
+
         <input
           type="file"
           accept="image/*"
           multiple
           onChange={handleImageUpload}
         />
+
+        <div style={{ marginTop: "12px" }}>
+          <button
+            onClick={handleRunDemoClassification}
+            style={{
+              padding: "10px 16px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+              cursor: "pointer",
+            }}
+          >
+            Run Demo AI Classification
+          </button>
+        </div>
+
         <p style={{ marginTop: "8px" }}>
           Uploaded images will appear in the library with placeholder metadata.
+          Click the button to auto-fill metadata from filename keywords.
         </p>
       </section>
 

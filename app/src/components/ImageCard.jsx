@@ -20,35 +20,90 @@ function ImageCard({ item, noteValue, onNoteChange }) {
       />
 
       <div style={{ padding: "16px" }}>
-        <h3 style={{ marginTop: 0 }}>{item.garmentType}</h3>
-        <p>{item.description}</p>
-        <p>
-          <strong>Style:</strong> {item.style}
-        </p>
-        <p>
-          <strong>Material:</strong> {item.material}
-        </p>
-        <p>
-          <strong>Color:</strong> {item.colorPalette}
-        </p>
-        <p>
-          <strong>Location:</strong> {item.location.city},{" "}
-          {item.location.country}
-        </p>
-        <p>
-          <strong>Designer:</strong> {item.designer}
-        </p>
+        <h3 style={{ marginTop: 0, marginBottom: "8px" }}>
+          {item.garmentType}
+        </h3>
+
+        <p style={{ marginTop: 0, color: "#444" }}>{item.description}</p>
+
+        <div
+          style={{
+            marginTop: "16px",
+            padding: "12px",
+            background: "#f4f8ff",
+            border: "1px solid #d7e6ff",
+            borderRadius: "8px",
+          }}
+        >
+          <p style={{ margin: 0, marginBottom: "10px" }}>
+            <strong>AI Metadata</strong>
+            <span
+              style={{
+                marginLeft: "8px",
+                fontSize: "12px",
+                color: "#2f5ea8",
+                background: "#e8f1ff",
+                padding: "2px 6px",
+                borderRadius: "999px",
+              }}
+            >
+              AI-generated
+            </span>
+          </p>
+
+          <p>
+            <strong>Garment Type:</strong> {item.garmentType}
+          </p>
+          <p>
+            <strong>Style:</strong> {item.style}
+          </p>
+          <p>
+            <strong>Material:</strong> {item.material}
+          </p>
+          <p>
+            <strong>Color:</strong> {item.colorPalette}
+          </p>
+          <p>
+            <strong>Pattern:</strong> {item.pattern}
+          </p>
+          <p>
+            <strong>Occasion:</strong> {item.occasion}
+          </p>
+          <p>
+            <strong>Trend Notes:</strong> {item.trendNotes}
+          </p>
+          <p>
+            <strong>Location:</strong> {item.location.city},{" "}
+            {item.location.country}
+          </p>
+          <p>
+            <strong>Designer:</strong> {item.designer}
+          </p>
+        </div>
 
         <div
           style={{
             marginTop: "16px",
             padding: "12px",
             background: "#f7f7f7",
+            border: "1px solid #e5e5e5",
             borderRadius: "8px",
           }}
         >
-          <p style={{ marginTop: 0, marginBottom: "8px" }}>
+          <p style={{ margin: 0, marginBottom: "10px" }}>
             <strong>Designer Note</strong>
+            <span
+              style={{
+                marginLeft: "8px",
+                fontSize: "12px",
+                color: "#555",
+                background: "#ececec",
+                padding: "2px 6px",
+                borderRadius: "999px",
+              }}
+            >
+              User-added
+            </span>
           </p>
 
           <textarea
