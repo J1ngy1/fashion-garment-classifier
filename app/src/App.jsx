@@ -2,50 +2,7 @@ import { useMemo, useState } from "react";
 import mockImages from "./data/mockImages";
 import ImageCard from "./components/ImageCard";
 import { classifyImageFromName } from "./utils/classifyImage";
-
-const FILTER_CONFIGS = [
-  {
-    key: "garmentType",
-    label: "Garment Type",
-    getValue: (item) => item.garmentType,
-  },
-  {
-    key: "style",
-    label: "Style",
-    getValue: (item) => item.style,
-  },
-  {
-    key: "continent",
-    label: "Continent",
-    getValue: (item) => item.location.continent,
-  },
-  {
-    key: "country",
-    label: "Country",
-    getValue: (item) => item.location.country,
-  },
-  {
-    key: "city",
-    label: "City",
-    getValue: (item) => item.location.city,
-  },
-  {
-    key: "occasion",
-    label: "Occasion",
-    getValue: (item) => item.occasion,
-  },
-  {
-    key: "seasonCaptured",
-    label: "Captured Season",
-    getValue: (item) => item.time.seasonCaptured,
-  },
-  {
-    key: "designer",
-    label: "Designer",
-    getValue: (item) => item.designer,
-  },
-];
-
+import { FILTER_CONFIGS, filterImages } from "./utils/filterImages";
 function App() {
   const [images, setImages] = useState(mockImages);
   const [searchText, setSearchText] = useState("");
@@ -170,45 +127,14 @@ function App() {
   };
 
   const filteredImages = useMemo(() => {
-    return images.filter((item) => {
-      const matchesDropdownFilters = FILTER_CONFIGS.every((config) => {
-        const selectedValue = filters[config.key];
-        const itemValue = config.getValue(item);
-
-        return !selectedValue || itemValue === selectedValue;
-      });
-
-      const designerNote = designerNotes[item.id] || "";
-      const designerTag = designerTags[item.id] || "";
-
-      const searchableText = `
-        ${item.description}
-        ${item.garmentType}
-        ${item.style}
-        ${item.material}
-        ${item.colorPalette}
-        ${item.pattern}
-        ${item.occasion}
-        ${item.consumerProfile}
-        ${item.trendNotes}
-        ${item.location.continent}
-        ${item.location.country}
-        ${item.location.city}
-        ${item.time.year}
-        ${item.time.month}
-        ${item.time.seasonCaptured}
-        ${item.designer}
-        ${designerNote}
-        ${designerTag}
-      `.toLowerCase();
-
-      const matchesSearch =
-        !searchText || searchableText.includes(searchText.toLowerCase());
-
-      return matchesDropdownFilters && matchesSearch;
-    });
+    return filterImages(
+      images,
+      filters,
+      searchText,
+      designerNotes,
+      designerTags,
+    );
   }, [images, filters, searchText, designerNotes, designerTags]);
-
   return (
     <div
       style={{
