@@ -6,6 +6,7 @@ function App() {
   // selected filter values
   const [selectedGarmentType, setSelectedGarmentType] = useState("");
   const [selectedStyle, setSelectedStyle] = useState("");
+  const [searchText, setSearchText] = useState("");
 
   // build garment type options from data
   const garmentTypeOptions = useMemo(() => {
@@ -17,7 +18,7 @@ function App() {
     return [...new Set(mockImages.map((item) => item.style))];
   }, []);
 
-  // apply both filters together
+  // apply filters + text search together
   const filteredImages = useMemo(() => {
     return mockImages.filter((item) => {
       const matchesGarmentType =
@@ -25,13 +26,47 @@ function App() {
 
       const matchesStyle = !selectedStyle || item.style === selectedStyle;
 
-      return matchesGarmentType && matchesStyle;
+      const searchableText = `
+        ${item.description}
+        ${item.garmentType}
+        ${item.style}
+        ${item.material}
+        ${item.colorPalette}
+        ${item.pattern}
+        ${item.occasion}
+        ${item.consumerProfile}
+        ${item.trendNotes}
+        ${item.location.continent}
+        ${item.location.country}
+        ${item.location.city}
+        ${item.designer}
+      `.toLowerCase();
+
+      const matchesSearch =
+        !searchText || searchableText.includes(searchText.toLowerCase());
+
+      return matchesGarmentType && matchesStyle && matchesSearch;
     });
-  }, [selectedGarmentType, selectedStyle]);
+  }, [selectedGarmentType, selectedStyle, searchText]);
 
   return (
-    <div style={{ padding: "24px", fontFamily: "Arial, sans-serif" }}>
-      <h1>Fashion Garment Classification & Inspiration App</h1>
+    <div
+      style={{
+        padding: "24px",
+        fontFamily: "Arial, sans-serif",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
+    >
+      <h1
+        style={{
+          fontSize: "48px",
+          lineHeight: 1.1,
+          margin: 0,
+        }}
+      >
+        Fashion Garment Classification & Inspiration App
+      </h1>
       <p>Upload, classify, search, and annotate inspiration images.</p>
 
       <section style={{ marginTop: "24px" }}>
@@ -86,6 +121,20 @@ function App() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="searchInput" style={{ marginRight: "8px" }}>
+              Search:
+            </label>
+            <input
+              id="searchInput"
+              type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search descriptions or metadata"
+              style={{ padding: "8px", minWidth: "260px" }}
+            />
           </div>
         </div>
       </section>
