@@ -1,4 +1,4 @@
-function ImageCard({ item, noteValue, onNoteChange }) {
+function ImageCard({ item, noteValue, tagValue, onNoteChange, onTagChange }) {
   return (
     <div
       style={{
@@ -91,7 +91,7 @@ function ImageCard({ item, noteValue, onNoteChange }) {
           }}
         >
           <p style={{ margin: 0, marginBottom: "10px" }}>
-            <strong>Designer Note</strong>
+            <strong>Designer Annotations</strong>
             <span
               style={{
                 marginLeft: "8px",
@@ -106,19 +106,60 @@ function ImageCard({ item, noteValue, onNoteChange }) {
             </span>
           </p>
 
-          <textarea
-            value={noteValue}
-            onChange={(e) => onNoteChange(item.id, e.target.value)}
-            placeholder="Add your own observation here"
-            rows={4}
-            style={{
-              width: "100%",
-              boxSizing: "border-box",
-              resize: "vertical",
-              padding: "8px",
-              fontFamily: "Arial, sans-serif",
-            }}
-          />
+          <div style={{ marginBottom: "12px" }}>
+            <label
+              htmlFor={`tags-${item.id}`}
+              style={{
+                display: "block",
+                marginBottom: "6px",
+                fontWeight: "bold",
+              }}
+            >
+              Designer Tags
+            </label>
+
+            <input
+              id={`tags-${item.id}`}
+              type="text"
+              value={tagValue}
+              onChange={(e) => onTagChange(item.id, e.target.value)}
+              placeholder="e.g. embroidered neckline, artisan market, resort"
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "8px",
+                fontFamily: "Arial, sans-serif",
+              }}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor={`note-${item.id}`}
+              style={{
+                display: "block",
+                marginBottom: "6px",
+                fontWeight: "bold",
+              }}
+            >
+              Designer Note
+            </label>
+
+            <textarea
+              id={`note-${item.id}`}
+              value={noteValue}
+              onChange={(e) => onNoteChange(item.id, e.target.value)}
+              placeholder="Add your own observation here"
+              rows={4}
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                resize: "vertical",
+                padding: "8px",
+                fontFamily: "Arial, sans-serif",
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

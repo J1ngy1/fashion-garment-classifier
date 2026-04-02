@@ -9,6 +9,7 @@ function App() {
   const [selectedStyle, setSelectedStyle] = useState("");
   const [searchText, setSearchText] = useState("");
   const [designerNotes, setDesignerNotes] = useState({});
+  const [designerTags, setDesignerTags] = useState({});
 
   const garmentTypeOptions = useMemo(() => {
     return [...new Set(images.map((item) => item.garmentType))];
@@ -20,6 +21,13 @@ function App() {
 
   const handleNoteChange = (imageId, value) => {
     setDesignerNotes((prev) => ({
+      ...prev,
+      [imageId]: value,
+    }));
+  };
+
+  const handleTagChange = (imageId, value) => {
+    setDesignerTags((prev) => ({
       ...prev,
       [imageId]: value,
     }));
@@ -89,6 +97,7 @@ function App() {
       const matchesStyle = !selectedStyle || item.style === selectedStyle;
 
       const designerNote = designerNotes[item.id] || "";
+      const designerTag = designerTags[item.id] || "";
 
       const searchableText = `
         ${item.description}
@@ -105,6 +114,7 @@ function App() {
         ${item.location.city}
         ${item.designer}
         ${designerNote}
+        ${designerTag}
       `.toLowerCase();
 
       const matchesSearch =
@@ -112,7 +122,14 @@ function App() {
 
       return matchesGarmentType && matchesStyle && matchesSearch;
     });
-  }, [images, selectedGarmentType, selectedStyle, searchText, designerNotes]);
+  }, [
+    images,
+    selectedGarmentType,
+    selectedStyle,
+    searchText,
+    designerNotes,
+    designerTags,
+  ]);
 
   return (
     <div
@@ -225,7 +242,7 @@ function App() {
               type="text"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              placeholder="Search descriptions or metadata"
+              placeholder="Search descriptions, metadata, tags, or notes"
               style={{ padding: "8px", minWidth: "260px" }}
             />
           </div>
@@ -248,7 +265,9 @@ function App() {
               key={item.id}
               item={item}
               noteValue={designerNotes[item.id] || ""}
+              tagValue={designerTags[item.id] || ""}
               onNoteChange={handleNoteChange}
+              onTagChange={handleTagChange}
             />
           ))}
         </div>
