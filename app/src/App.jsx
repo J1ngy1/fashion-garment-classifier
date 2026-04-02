@@ -3,21 +3,87 @@ import mockImages from "./data/mockImages";
 import ImageCard from "./components/ImageCard";
 import { classifyImageFromName } from "./utils/classifyImage";
 
+const FILTER_CONFIGS = [
+  {
+    key: "garmentType",
+    label: "Garment Type",
+    getValue: (item) => item.garmentType,
+  },
+  {
+    key: "style",
+    label: "Style",
+    getValue: (item) => item.style,
+  },
+  {
+    key: "continent",
+    label: "Continent",
+    getValue: (item) => item.location.continent,
+  },
+  {
+    key: "country",
+    label: "Country",
+    getValue: (item) => item.location.country,
+  },
+  {
+    key: "city",
+    label: "City",
+    getValue: (item) => item.location.city,
+  },
+  {
+    key: "occasion",
+    label: "Occasion",
+    getValue: (item) => item.occasion,
+  },
+  {
+    key: "seasonCaptured",
+    label: "Captured Season",
+    getValue: (item) => item.time.seasonCaptured,
+  },
+  {
+    key: "designer",
+    label: "Designer",
+    getValue: (item) => item.designer,
+  },
+];
+
 function App() {
   const [images, setImages] = useState(mockImages);
-  const [selectedGarmentType, setSelectedGarmentType] = useState("");
-  const [selectedStyle, setSelectedStyle] = useState("");
   const [searchText, setSearchText] = useState("");
   const [designerNotes, setDesignerNotes] = useState({});
   const [designerTags, setDesignerTags] = useState({});
+  const [filters, setFilters] = useState({
+    garmentType: "",
+    style: "",
+    continent: "",
+    country: "",
+    city: "",
+    occasion: "",
+    seasonCaptured: "",
+    designer: "",
+  });
 
-  const garmentTypeOptions = useMemo(() => {
-    return [...new Set(images.map((item) => item.garmentType))];
+  const filterOptions = useMemo(() => {
+    const options = {};
+
+    FILTER_CONFIGS.forEach((config) => {
+      options[config.key] = [
+        ...new Set(
+          images
+            .map((item) => config.getValue(item))
+            .filter((value) => value && value.trim() !== ""),
+        ),
+      ].sort();
+    });
+
+    return options;
   }, [images]);
 
-  const styleOptions = useMemo(() => {
-    return [...new Set(images.map((item) => item.style))];
-  }, [images]);
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   const handleNoteChange = (imageId, value) => {
     setDesignerNotes((prev) => ({
@@ -89,12 +155,28 @@ function App() {
     );
   };
 
+  const clearAllFilters = () => {
+    setFilters({
+      garmentType: "",
+      style: "",
+      continent: "",
+      country: "",
+      city: "",
+      occasion: "",
+      seasonCaptured: "",
+      designer: "",
+    });
+    setSearchText("");
+  };
+
   const filteredImages = useMemo(() => {
     return images.filter((item) => {
-      const matchesGarmentType =
-        !selectedGarmentType || item.garmentType === selectedGarmentType;
+      const matchesDropdownFilters = FILTER_CONFIGS.every((config) => {
+        const selectedValue = filters[config.key];
+        const itemValue = config.getValue(item);
 
-      const matchesStyle = !selectedStyle || item.style === selectedStyle;
+        return !selectedValue || itemValue === selectedValue;
+      });
 
       const designerNote = designerNotes[item.id] || "";
       const designerTag = designerTags[item.id] || "";
@@ -112,6 +194,9 @@ function App() {
         ${item.location.continent}
         ${item.location.country}
         ${item.location.city}
+        ${item.time.year}
+        ${item.time.month}
+        ${item.time.seasonCaptured}
         ${item.designer}
         ${designerNote}
         ${designerTag}
@@ -120,16 +205,9 @@ function App() {
       const matchesSearch =
         !searchText || searchableText.includes(searchText.toLowerCase());
 
-      return matchesGarmentType && matchesStyle && matchesSearch;
+      return matchesDropdownFilters && matchesSearch;
     });
-  }, [
-    images,
-    selectedGarmentType,
-    selectedStyle,
-    searchText,
-    designerNotes,
-    designerTags,
-  ]);
+  }, [images, filters, searchText, designerNotes, designerTags]);
 
   return (
     <div
@@ -172,6 +250,7 @@ function App() {
               borderRadius: "8px",
               border: "1px solid #ccc",
               cursor: "pointer",
+              marginRight: "12px",
             }}
           >
             Run Demo AI Classification
@@ -195,43 +274,30 @@ function App() {
             marginBottom: "16px",
           }}
         >
-          <div>
-            <label htmlFor="garmentTypeFilter" style={{ marginRight: "8px" }}>
-              Garment Type:
-            </label>
-            <select
-              id="garmentTypeFilter"
-              value={selectedGarmentType}
-              onChange={(e) => setSelectedGarmentType(e.target.value)}
-              style={{ padding: "8px", minWidth: "180px" }}
-            >
-              <option value="">All</option>
-              {garmentTypeOptions.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
+          {FILTER_CONFIGS.map((config) => (
+            <div key={config.key}>
+              <label
+                htmlFor={`${config.key}Filter`}
+                style={{ marginRight: "8px" }}
+              >
+                {config.label}:
+              </label>
 
-          <div>
-            <label htmlFor="styleFilter" style={{ marginRight: "8px" }}>
-              Style:
-            </label>
-            <select
-              id="styleFilter"
-              value={selectedStyle}
-              onChange={(e) => setSelectedStyle(e.target.value)}
-              style={{ padding: "8px", minWidth: "180px" }}
-            >
-              <option value="">All</option>
-              {styleOptions.map((style) => (
-                <option key={style} value={style}>
-                  {style}
-                </option>
-              ))}
-            </select>
-          </div>
+              <select
+                id={`${config.key}Filter`}
+                value={filters[config.key]}
+                onChange={(e) => handleFilterChange(config.key, e.target.value)}
+                style={{ padding: "8px", minWidth: "180px" }}
+              >
+                <option value="">All</option>
+                {filterOptions[config.key].map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
 
           <div>
             <label htmlFor="searchInput" style={{ marginRight: "8px" }}>
@@ -247,6 +313,18 @@ function App() {
             />
           </div>
         </div>
+
+        <button
+          onClick={clearAllFilters}
+          style={{
+            padding: "8px 14px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+            cursor: "pointer",
+          }}
+        >
+          Clear Filters
+        </button>
       </section>
 
       <section style={{ marginTop: "24px" }}>
