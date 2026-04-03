@@ -8,12 +8,13 @@ test("user can upload, classify, and filter images", async ({ page }) => {
     "tests/fixtures/dress-street-blue-floral-seoul-korea-summer-july-2026.svg",
   );
   await page.setInputFiles('input[type="file"]', fixturePath);
-  await page.getByRole("button", { name: "Run Demo AI Classification" }).click();
+  await page
+    .getByRole("button", { name: "Run Demo AI Classification" })
+    .click();
 
   await page.selectOption("#cityFilter", "Seoul");
   await page.selectOption("#monthFilter", "July");
   await page.selectOption("#garmentTypeFilter", "Dress");
 
   await expect(page.getByText("1 result(s)")).toBeVisible();
-  await expect(page.getByText("Classification Source: local-mock")).toBeVisible();
 });

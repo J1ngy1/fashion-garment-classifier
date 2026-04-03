@@ -13,7 +13,6 @@ describe("parseModelOutput", () => {
       season: "Fall",
       occasion: "Casual",
       consumerProfile: "Young Adult",
-      trendNotes: "Oversized layers are trending.",
       location: {
         continent: "North America",
         country: "United States",

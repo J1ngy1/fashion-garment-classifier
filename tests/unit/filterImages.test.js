@@ -12,7 +12,6 @@ const mockData = [
     pattern: "Solid",
     occasion: "Casual",
     consumerProfile: "Young Adult",
-    trendNotes: "Oversized outerwear",
     location: {
       continent: "North America",
       country: "United States",
@@ -35,7 +34,6 @@ const mockData = [
     pattern: "Floral",
     occasion: "Vacation",
     consumerProfile: "Women",
-    trendNotes: "Artisan details",
     location: {
       continent: "Asia",
       country: "Thailand",
@@ -61,7 +59,6 @@ describe("filterImages", () => {
         colorPalette: "",
         pattern: "",
         consumerProfile: "",
-        trendNotes: "",
         continent: "",
         country: "",
         city: "",
@@ -90,7 +87,6 @@ describe("filterImages", () => {
         colorPalette: "",
         pattern: "",
         consumerProfile: "",
-        trendNotes: "",
         continent: "",
         country: "",
         city: "",

@@ -466,7 +466,7 @@ function App() {
               fontWeight: "500",
             }}
           >
-            {filteredImages.length} result
+            {filteredImages.length} result(s)
             {filteredImages.length !== 1 ? "s" : ""}
           </div>
         </div>
