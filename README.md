@@ -149,3 +149,4 @@ See `eval/EVALUATION_SUMMARY.md` and `eval/reports/latest-report.json`.
 2. Add confidence scores and uncertainty handling per attribute.
 3. Persist data in a backend database for multi-device access.
 4. Expand evaluation with real images and confusion-matrix reporting.
+5. To improve scalability and reliability, a message queue (e.g., Kafka or RabbitMQ) can be introduced to process AI classification tasks asynchronously. This would help avoid blocking the UI, handle burst traffic, and mitigate API rate-limit issues.
