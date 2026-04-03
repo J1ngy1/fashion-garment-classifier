@@ -1,6 +1,13 @@
 {
-  "generatedAt": "2026-04-03T14:19:37.034Z",
+  "generatedAt": "2026-04-03T15:19:29.388Z",
   "sampleCount": 50,
+  "scoredSampleCount": 49,
+  "skippedForAccuracy": 1,
+  "geminiApiConfigured": true,
+  "geminiSuccessCount": 0,
+  "mockClassifierCount": 50,
+  "samplesWithoutImageFile": 49,
+  "samplesWithoutApiKey": 0,
   "accuracy": {
     "garmentType": 100,
     "style": 100,
@@ -11,27 +18,28 @@
     "locationContext": 100
   },
   "totals": {
-    "garmentType": 50,
-    "style": 50,
-    "material": 50,
-    "colorPalette": 50,
-    "pattern": 50,
-    "occasion": 50,
-    "locationContext": 50
+    "garmentType": 49,
+    "style": 49,
+    "material": 49,
+    "colorPalette": 49,
+    "pattern": 49,
+    "occasion": 49,
+    "locationContext": 49
   },
   "correct": {
-    "garmentType": 50,
-    "style": 50,
-    "material": 50,
-    "colorPalette": 50,
-    "pattern": 50,
-    "occasion": 50,
-    "locationContext": 50
+    "garmentType": 49,
+    "style": 49,
+    "material": 49,
+    "colorPalette": 49,
+    "pattern": 49,
+    "occasion": 49,
+    "locationContext": 49
   },
   "errorCount": 0,
   "sampleErrors": [],
   "notes": [
-    "This evaluation uses local mock multimodal classification based on filename tokens.",
-    "Replace classifyImage() internals with a real multimodal API call for production-grade metrics."
+    "Samples with a matching file under eval/images/ and GEMINI_API_KEY set use Gemini multimodal classification (then parseModelOutput).",
+    "Missing image files or missing API key fall back to the local filename classifier.",
+    "Rows with excludeFromAccuracy: true (e.g. gemini-smoke.png) verify API connectivity without affecting aggregate accuracy."
   ]
 }
