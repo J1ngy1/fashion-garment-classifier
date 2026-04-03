@@ -42,7 +42,7 @@ Open the URL printed by Vite (typically `http://localhost:5173/`).
 
 5. **Evaluation (`npm run eval`)**: The script `eval/run-evaluation.mjs` loads `GEMINI_API_KEY` from the environment or from `app/.env` (without printing the key). For each row in `eval/labeled-test-set.json`, if a file exists at `eval/images/<basename>` and the key is set, that sample is classified with **Gemini + image**; otherwise it uses the **filename mock**. The shipped `eval/images/gemini-smoke.png` is a smoke test (excluded from accuracy so trivial image output does not skew metrics). Add more images matching the dataset basenames for a full multimodal benchmark.
 
-6. **Free tier**: Gemini API usage may be subject to [rate limits and quotas](https://ai.google.dev/pricing); free-tier caps may apply. **The app defaults to mock classification to avoid costs during development.**
+6. **Free tier**: Gemini API usage may be subject to [rate limits and quotas](https://ai.google.dev/pricing); free-tier caps may apply.
 
 7. **Security note**: The key is loaded in the browser bundle for this local demo. For production, call Gemini from a backend and keep keys server-side. The eval script only reads the key server-side from `app/.env`; it never logs the secret.
 
