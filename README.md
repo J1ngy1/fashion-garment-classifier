@@ -22,7 +22,7 @@ npm --prefix app install
 npm --prefix app run dev
 ```
 
-Open the URL printed by Vite (typically `http://127.0.0.1:5173`).
+Open the URL printed by Vite (typically `http://localhost:5173/`).
 
 ### Gemini API (real multimodal classification)
 
