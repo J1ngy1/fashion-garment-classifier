@@ -12,7 +12,6 @@ const mockImages = [
     season: "Fall",
     occasion: "Casual",
     consumerProfile: "Young Adult",
-    trendNotes: "Oversized outerwear",
     location: {
       continent: "North America",
       country: "United States",
@@ -40,7 +39,6 @@ const mockImages = [
     season: "Spring",
     occasion: "Work",
     consumerProfile: "Professional",
-    trendNotes: "Clean silhouettes",
     location: {
       continent: "Europe",
       country: "France",
@@ -68,7 +66,6 @@ const mockImages = [
     season: "Summer",
     occasion: "Vacation",
     consumerProfile: "Women",
-    trendNotes: "Artisan details",
     location: {
       continent: "Asia",
       country: "Thailand",
@@ -96,7 +93,6 @@ const mockImages = [
     season: "Winter",
     occasion: "Business Casual",
     consumerProfile: "Men",
-    trendNotes: "Relaxed tailoring",
     location: {
       continent: "Europe",
       country: "United Kingdom",

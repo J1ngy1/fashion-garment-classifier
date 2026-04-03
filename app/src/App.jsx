@@ -43,6 +43,8 @@ function App() {
     getInitialState(STORAGE_KEYS.tags, {}),
   );
   const [isClassifying, setIsClassifying] = useState(false);
+  const [lastClassificationResult, setLastClassificationResult] =
+    useState(null);
   const [filters, setFilters] = useState({
     garmentType: "",
     style: "",
@@ -50,7 +52,6 @@ function App() {
     colorPalette: "",
     pattern: "",
     consumerProfile: "",
-    trendNotes: "",
     continent: "",
     country: "",
     city: "",
@@ -104,6 +105,68 @@ function App() {
     }));
   };
 
+  const handleDeleteImage = (imageId) => {
+    setImages((prev) => prev.filter((img) => img.id !== imageId));
+    // Also clean up notes and tags
+    setDesignerNotes((prev) => {
+      const newNotes = { ...prev };
+      delete newNotes[imageId];
+      return newNotes;
+    });
+    setDesignerTags((prev) => {
+      const newTags = { ...prev };
+      delete newTags[imageId];
+      return newTags;
+    });
+  };
+
+  const handleReclassifyImage = async (imageId) => {
+    const imageToReclassify = images.find((img) => img.id === imageId);
+    if (!imageToReclassify) return;
+
+    // Reset classification data
+    const resetImage = {
+      ...imageToReclassify,
+      garmentType: "Unknown",
+      style: "Unknown",
+      material: "Unknown",
+      colorPalette: "Unknown",
+      pattern: "Unknown",
+      season: "Unknown",
+      occasion: "Unknown",
+      consumerProfile: "Unknown",
+      location: {
+        continent: "Unknown",
+        country: "Unknown",
+        city: "Unknown",
+      },
+      time: {
+        year: new Date().getFullYear(),
+        month: "Unknown",
+        seasonCaptured: "Unknown",
+      },
+      designer: "Current User",
+      annotations: [],
+      classificationSource: "not-run",
+    };
+
+    // Update the image in state
+    setImages((prev) =>
+      prev.map((img) => (img.id === imageId ? resetImage : img)),
+    );
+
+    // Run classification
+    const result = await classifyImage({
+      fileName: imageToReclassify.originalFileName || "",
+      imageDataUrl: imageToReclassify.imageUrl,
+    });
+
+    // Update with new classification
+    setImages((prev) =>
+      prev.map((img) => (img.id === imageId ? { ...img, ...result } : img)),
+    );
+  };
+
   const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files || []);
 
@@ -127,7 +190,6 @@ function App() {
           season: "Unknown",
           occasion: "Unknown",
           consumerProfile: "Unknown",
-          trendNotes: "Pending AI classification",
           location: {
             continent: "Unknown",
             country: "Unknown",
@@ -150,6 +212,10 @@ function App() {
 
   const handleRunDemoClassification = async () => {
     setIsClassifying(true);
+    let geminiCount = 0;
+    let mockCount = 0;
+    let fallbackCount = 0;
+
     const nextImages = await Promise.all(
       images.map(async (item) => {
         if (item.classificationSource !== "not-run") {
@@ -159,14 +225,33 @@ function App() {
           fileName: item.originalFileName || "",
           imageDataUrl: item.imageUrl,
         });
+
+        // Count the classification sources
+        if (result.classificationSource === "gemini") {
+          geminiCount++;
+        } else if (result.classificationSource === "local-mock") {
+          mockCount++;
+        } else if (result.classificationSource === "fallback-parser") {
+          fallbackCount++;
+        }
+
         return {
           ...item,
           ...result,
         };
       }),
     );
+
     setImages(nextImages);
     setIsClassifying(false);
+
+    // Update the last classification result
+    setLastClassificationResult({
+      geminiCount,
+      mockCount,
+      fallbackCount,
+      totalClassified: geminiCount + mockCount + fallbackCount,
+    });
   };
 
   const clearAllFilters = () => {
@@ -177,7 +262,6 @@ function App() {
       colorPalette: "",
       pattern: "",
       consumerProfile: "",
-      trendNotes: "",
       continent: "",
       country: "",
       city: "",
@@ -238,8 +322,26 @@ function App() {
       </h1>
 
       <div style={{ marginTop: "12px", fontSize: "18px", fontWeight: "bold" }}>
-        Classification Mode: {isGeminiAvailable() ? "Gemini API" : "Local Mock"}
+        Classification Mode:{" "}
+        {(() => {
+          try {
+            return isGeminiAvailable() ? "Gemini API" : "Local Mock";
+          } catch (error) {
+            console.error("Error checking Gemini availability:", error);
+            return "Local Mock";
+          }
+        })()}
       </div>
+
+      {lastClassificationResult && (
+        <div style={{ marginTop: "8px", fontSize: "14px", color: "#666" }}>
+          Last Classification: {lastClassificationResult.geminiCount} Gemini,{" "}
+          {lastClassificationResult.mockCount} Local Mock
+          {lastClassificationResult.fallbackCount > 0 &&
+            `, ${lastClassificationResult.fallbackCount} Fallback`}
+          ({lastClassificationResult.totalClassified} total)
+        </div>
+      )}
 
       <p style={{ marginTop: "12px" }}>
         Upload, classify, search, and annotate inspiration images.
@@ -272,12 +374,6 @@ function App() {
               : "Run Demo AI Classification"}
           </button>
         </div>
-
-        <p style={{ marginTop: "8px" }}>
-          Uploaded images are persisted in local storage. With{" "}
-          <code>GEMINI_API_KEY</code> set (see README), classification uses the
-          Gemini API; otherwise the local filename-based mock is used.
-        </p>
       </section>
 
       <section style={{ marginTop: "24px" }}>
@@ -344,15 +440,42 @@ function App() {
         </button>
       </section>
 
-      <section style={{ marginTop: "24px" }}>
-        <h2>Image Library</h2>
-        <p>{filteredImages.length} result(s)</p>
+      <section>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              color: "#2c3e50",
+              fontSize: "24px",
+              fontWeight: "400",
+            }}
+          >
+            Image Library
+          </h2>
+          <div
+            style={{
+              fontSize: "16px",
+              color: "#7f8c8d",
+              fontWeight: "500",
+            }}
+          >
+            {filteredImages.length} result
+            {filteredImages.length !== 1 ? "s" : ""}
+          </div>
+        </div>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: "16px",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: "24px",
           }}
         >
           {filteredImages.map((item) => (
@@ -363,6 +486,8 @@ function App() {
               tagValue={designerTags[item.id] || ""}
               onNoteChange={handleNoteChange}
               onTagChange={handleTagChange}
+              onDelete={() => handleDeleteImage(item.id)}
+              onReclassify={handleReclassifyImage}
             />
           ))}
         </div>

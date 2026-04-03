@@ -150,8 +150,6 @@ function inferFromFileName(fileName = "") {
     season,
     occasion,
     consumerProfile,
-    trendNotes:
-      "Local mock multimodal inference from filename tokens and defaults.",
     location: {
       continent,
       country,
@@ -171,16 +169,38 @@ function inferFromFileName(fileName = "") {
  * Accepts legacy keys `location` / `time` or Gemini-oriented `locationContext` / `timeContext`.
  */
 export function parseModelOutput(rawOutput) {
+  console.log("[parseModelOutput] Parsing model output");
   let parsed = rawOutput;
+
   if (typeof rawOutput === "string") {
+    console.log(
+      "[parseModelOutput] Raw output is string, attempting to parse JSON",
+    );
     const trimmed = rawOutput.trim();
     const unfenced = trimmed
       .replace(/^```(?:json)?\s*/i, "")
       .replace(/\s*```$/i, "");
-    parsed = JSON.parse(unfenced);
+
+    try {
+      parsed = JSON.parse(unfenced);
+      console.log("[parseModelOutput] JSON parsing successful");
+    } catch (parseError) {
+      console.error(
+        "[parseModelOutput] JSON parsing failed:",
+        parseError.message,
+      );
+      console.error("[parseModelOutput] Raw output was:", rawOutput);
+      throw new Error(
+        `Failed to parse model output as JSON: ${parseError.message}`,
+      );
+    }
+  } else {
+    console.log("[parseModelOutput] Raw output is already an object");
   }
+
   const location = parsed.locationContext || parsed.location || {};
   const time = parsed.timeContext || parsed.time || {};
+
   const normalized = {
     description: parsed.description || "No description generated.",
     garmentType: parsed.garmentType || UNKNOWN,
@@ -191,7 +211,6 @@ export function parseModelOutput(rawOutput) {
     season: parsed.season || UNKNOWN,
     occasion: parsed.occasion || UNKNOWN,
     consumerProfile: parsed.consumerProfile || UNKNOWN,
-    trendNotes: parsed.trendNotes || UNKNOWN,
     location: {
       continent: location.continent || UNKNOWN,
       country: location.country || UNKNOWN,
@@ -205,6 +224,8 @@ export function parseModelOutput(rawOutput) {
     },
     designer: parsed.designer || "Current User",
   };
+
+  console.log("[parseModelOutput] Normalization completed");
   return normalized;
 }
 
@@ -218,19 +239,32 @@ function getGeminiApiKey() {
     typeof import.meta !== "undefined" &&
     import.meta.env?.VITE_PLAYWRIGHT === "1"
   ) {
+    console.log("[API Key] Playwright test mode detected, returning empty key");
     return "";
   }
+
   if (typeof import.meta !== "undefined" && import.meta.env?.GEMINI_API_KEY) {
-    return String(import.meta.env.GEMINI_API_KEY).trim();
+    const key = String(import.meta.env.GEMINI_API_KEY).trim();
+    console.log(
+      `[API Key] Found key in import.meta.env (length: ${key.length})`,
+    );
+    return key;
   }
+
   if (typeof process !== "undefined" && process.env?.GEMINI_API_KEY) {
-    return String(process.env.GEMINI_API_KEY).trim();
+    const key = String(process.env.GEMINI_API_KEY).trim();
+    console.log(`[API Key] Found key in process.env (length: ${key.length})`);
+    return key;
   }
+
+  console.log("[API Key] No Gemini API key found in environment");
   return "";
 }
 
 export function isGeminiAvailable() {
-  return getGeminiApiKey() !== "";
+  const hasKey = getGeminiApiKey() !== "";
+  console.log(`[Gemini Available] ${hasKey ? "Yes" : "No"}`);
+  return hasKey;
 }
 
 function parseDataUrl(dataUrl) {
@@ -255,7 +289,6 @@ const GEMINI_JSON_INSTRUCTION = `You are a fashion garment analyst. Look at the 
   "season": "string",
   "occasion": "string",
   "consumerProfile": "string",
-  "trendNotes": "string",
   "locationContext": { "continent": "string", "country": "string", "city": "string" },
   "timeContext": { "year": number, "month": "string", "seasonCaptured": "string" }
 }
@@ -268,11 +301,14 @@ async function generateGeminiJson(
   base64,
   fileName,
 ) {
+  console.log(`[Gemini API] Calling ${modelName} for file: ${fileName}`);
+
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: modelName,
   });
+
   const result = await model.generateContent([
     {
       text: `${GEMINI_JSON_INSTRUCTION}\nOriginal filename (hint only): ${fileName}\n\nRespond with a single JSON object only (no markdown fences).`,
@@ -284,20 +320,38 @@ async function generateGeminiJson(
       },
     },
   ]);
+
   const text = result.response.text();
+  console.log(
+    `[Gemini API] Response received from ${modelName}, length: ${text.length} characters`,
+  );
+
+  // Log a preview of the response for debugging
+  const preview = text.substring(0, 200) + (text.length > 200 ? "..." : "");
+  console.log(`[Gemini API] Response preview: ${preview}`);
+
   return text;
 }
 
 async function classifyWithGemini(imageDataUrl, fileName) {
   const apiKey = getGeminiApiKey();
   if (!apiKey) {
+    console.log("[Gemini] No API key available");
     return null;
   }
+
   const parsedUrl = parseDataUrl(imageDataUrl);
   if (!parsedUrl) {
+    console.log("[Gemini] Failed to parse image data URL");
     return null;
   }
+
+  console.log(
+    `[Gemini] Attempting classification for "${fileName}" with ${parsedUrl.mimeType} image`,
+  );
+
   try {
+    console.log(`[Gemini] Trying primary model: ${GEMINI_MODEL_PRIMARY}`);
     const text = await generateGeminiJson(
       apiKey,
       GEMINI_MODEL_PRIMARY,
@@ -305,9 +359,16 @@ async function classifyWithGemini(imageDataUrl, fileName) {
       parsedUrl.base64,
       fileName,
     );
+    console.log("[Gemini] Primary model succeeded");
     return parseModelOutput(text);
   } catch (primaryError) {
+    console.warn(
+      `[Gemini] Primary model (${GEMINI_MODEL_PRIMARY}) failed:`,
+      primaryError.message || primaryError,
+    );
+
     try {
+      console.log(`[Gemini] Trying fallback model: ${GEMINI_MODEL_FALLBACK}`);
       const text = await generateGeminiJson(
         apiKey,
         GEMINI_MODEL_FALLBACK,
@@ -315,8 +376,13 @@ async function classifyWithGemini(imageDataUrl, fileName) {
         parsedUrl.base64,
         fileName,
       );
+      console.log("[Gemini] Fallback model succeeded");
       return parseModelOutput(text);
-    } catch {
+    } catch (fallbackError) {
+      console.error(
+        `[Gemini] Fallback model (${GEMINI_MODEL_FALLBACK}) also failed:`,
+        fallbackError.message || fallbackError,
+      );
       throw primaryError;
     }
   }
@@ -342,29 +408,58 @@ export async function classifyImage(input) {
   const imageDataUrl =
     typeof input === "object" && input ? input.imageDataUrl : undefined;
 
+  console.log(`[classifyImage] Starting classification for "${fileName}"`);
+
   if (imageDataUrl && getGeminiApiKey()) {
+    console.log(
+      "[classifyImage] Gemini API key available and image provided, attempting Gemini classification",
+    );
     try {
       const geminiParsed = await classifyWithGemini(imageDataUrl, fileName);
       if (geminiParsed) {
+        console.log("[classifyImage] Gemini classification successful");
         return {
           ...geminiParsed,
           classificationSource: "gemini",
         };
-      }
-    } catch (error) {
-      if (typeof process !== "undefined" && process.env.EVAL_VERBOSE === "1") {
-        console.warn(
-          "[classifyImage] Gemini failed, using local mock:",
-          error?.message || error,
+      } else {
+        console.log(
+          "[classifyImage] Gemini returned null, falling back to local mock",
         );
       }
+    } catch (error) {
+      console.error(
+        "[classifyImage] Gemini classification failed, falling back to local mock:",
+        error.message || error,
+      );
+      if (typeof process !== "undefined" && process.env.EVAL_VERBOSE === "1") {
+        console.warn("[classifyImage] Detailed Gemini error:", error);
+      }
+    }
+  } else {
+    if (!imageDataUrl) {
+      console.log(
+        "[classifyImage] No image data URL provided, using filename-only mock",
+      );
+    } else if (!getGeminiApiKey()) {
+      console.log(
+        "[classifyImage] No Gemini API key available, using local mock",
+      );
     }
   }
 
   try {
-    return runLocalMock(fileName);
+    console.log("[classifyImage] Running local mock classification");
+    const result = runLocalMock(fileName);
+    console.log("[classifyImage] Local mock classification completed");
+    return result;
   } catch (error) {
+    console.error(
+      "[classifyImage] Local mock failed, using fallback parser:",
+      error.message || error,
+    );
     const fallback = parseModelOutput(inferFromFileName(fileName));
+    console.log("[classifyImage] Fallback parser completed");
     return {
       ...fallback,
       classificationSource: "fallback-parser",

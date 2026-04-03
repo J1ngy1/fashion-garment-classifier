@@ -30,11 +30,6 @@ export const FILTER_CONFIGS = [
     getValue: (item) => item.consumerProfile,
   },
   {
-    key: "trendNotes",
-    label: "Trend Notes",
-    getValue: (item) => item.trendNotes,
-  },
-  {
     key: "continent",
     label: "Continent",
     getValue: (item) => item.location.continent,
@@ -103,7 +98,6 @@ export function filterImages(
       ${item.pattern}
       ${item.occasion}
       ${item.consumerProfile}
-      ${item.trendNotes}
       ${item.location.continent}
       ${item.location.country}
       ${item.location.city}
