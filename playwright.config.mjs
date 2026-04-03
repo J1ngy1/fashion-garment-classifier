@@ -11,5 +11,9 @@ export default defineConfig({
       "npm --prefix app run build && npm --prefix app run preview -- --host 127.0.0.1 --port 4173",
     port: 4173,
     reuseExistingServer: true,
+    env: {
+      ...process.env,
+      PLAYWRIGHT: "1",
+    },
   },
 });

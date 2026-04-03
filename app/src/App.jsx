@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import mockImages from "./data/mockImages";
 import ImageCard from "./components/ImageCard";
-import { classifyImage } from "./utils/classifyImage";
+import { classifyImage, isGeminiAvailable } from "./utils/classifyImage";
 import { FILTER_CONFIGS, filterImages } from "./utils/filterImages";
 
 const STORAGE_KEYS = {
@@ -155,7 +155,10 @@ function App() {
         if (item.garmentType !== "Unknown") {
           return item;
         }
-        const result = await classifyImage(item.originalFileName || "");
+        const result = await classifyImage({
+          fileName: item.originalFileName || "",
+          imageDataUrl: item.imageUrl,
+        });
         return {
           ...item,
           ...result,
@@ -209,7 +212,10 @@ function App() {
   }, [designerNotes]);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEYS.tags, JSON.stringify(designerTags));
+    window.localStorage.setItem(
+      STORAGE_KEYS.tags,
+      JSON.stringify(designerTags),
+    );
   }, [designerTags]);
 
   return (
@@ -230,6 +236,10 @@ function App() {
       >
         Fashion Garment Classification & Inspiration App
       </h1>
+
+      <div style={{ marginTop: "12px", fontSize: "18px", fontWeight: "bold" }}>
+        Classification Mode: {isGeminiAvailable() ? "Gemini API" : "Local Mock"}
+      </div>
 
       <p style={{ marginTop: "12px" }}>
         Upload, classify, search, and annotate inspiration images.
@@ -264,9 +274,9 @@ function App() {
         </div>
 
         <p style={{ marginTop: "8px" }}>
-          Uploaded images are persisted in local storage. Classification uses a
-          parser + local mock multimodal fallback, and can be replaced with a
-          real multimodal API later.
+          Uploaded images are persisted in local storage. With{" "}
+          <code>GEMINI_API_KEY</code> set (see README), classification uses the
+          Gemini API; otherwise the local filename-based mock is used.
         </p>
       </section>
 

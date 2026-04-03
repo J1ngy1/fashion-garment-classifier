@@ -47,4 +47,25 @@ describe("parseModelOutput", () => {
     expect(parsed.time.month).toBe("Unknown");
     expect(parsed.time.year).toBeTypeOf("number");
   });
+
+  it("maps locationContext and timeContext to location and time", () => {
+    const parsed = parseModelOutput({
+      description: "Test",
+      garmentType: "Coat",
+      locationContext: {
+        continent: "Europe",
+        country: "France",
+        city: "Paris",
+      },
+      timeContext: {
+        year: 2025,
+        month: "March",
+        seasonCaptured: "Spring",
+      },
+    });
+
+    expect(parsed.location.country).toBe("France");
+    expect(parsed.time.month).toBe("March");
+    expect(parsed.time.year).toBe(2025);
+  });
 });
