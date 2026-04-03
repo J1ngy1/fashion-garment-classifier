@@ -152,7 +152,7 @@ function App() {
     setIsClassifying(true);
     const nextImages = await Promise.all(
       images.map(async (item) => {
-        if (item.garmentType !== "Unknown") {
+        if (item.classificationSource !== "not-run") {
           return item;
         }
         const result = await classifyImage({
