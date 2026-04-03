@@ -70,14 +70,25 @@ function ImageCard({ item, noteValue, tagValue, onNoteChange, onTagChange }) {
             <strong>Occasion:</strong> {item.occasion}
           </p>
           <p>
+            <strong>Consumer Profile:</strong> {item.consumerProfile}
+          </p>
+          <p>
             <strong>Trend Notes:</strong> {item.trendNotes}
           </p>
           <p>
-            <strong>Location:</strong> {item.location.city},{" "}
-            {item.location.country}
+            <strong>Location:</strong> {item.location.city}, {item.location.country},{" "}
+            {item.location.continent}
+          </p>
+          <p>
+            <strong>Captured Time:</strong> {item.time.month} {item.time.year},{" "}
+            {item.time.seasonCaptured}
           </p>
           <p>
             <strong>Designer:</strong> {item.designer}
+          </p>
+          <p>
+            <strong>Classification Source:</strong>{" "}
+            {item.classificationSource || "seed-data"}
           </p>
         </div>
 

@@ -25,6 +25,7 @@ const mockImages = [
     },
     designer: "Alex",
     annotations: [],
+    classificationSource: "seed-data",
   },
   {
     id: 2,
@@ -52,6 +53,7 @@ const mockImages = [
     },
     designer: "Mia",
     annotations: [],
+    classificationSource: "seed-data",
   },
   {
     id: 3,
@@ -79,6 +81,7 @@ const mockImages = [
     },
     designer: "Sophia",
     annotations: [],
+    classificationSource: "seed-data",
   },
   {
     id: 4,
@@ -106,6 +109,7 @@ const mockImages = [
     },
     designer: "James",
     annotations: [],
+    classificationSource: "seed-data",
   },
 ];
 

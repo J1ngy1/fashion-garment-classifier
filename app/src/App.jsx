@@ -1,20 +1,62 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import mockImages from "./data/mockImages";
 import ImageCard from "./components/ImageCard";
-import { classifyImageFromName } from "./utils/classifyImage";
+import { classifyImage } from "./utils/classifyImage";
 import { FILTER_CONFIGS, filterImages } from "./utils/filterImages";
+
+const STORAGE_KEYS = {
+  images: "fashion-app-images-v1",
+  notes: "fashion-app-designer-notes-v1",
+  tags: "fashion-app-designer-tags-v1",
+};
+
+function getInitialState(key, fallbackValue) {
+  try {
+    const stored = window.localStorage.getItem(key);
+    if (!stored) {
+      return fallbackValue;
+    }
+    return JSON.parse(stored);
+  } catch {
+    return fallbackValue;
+  }
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Failed to read image file."));
+    reader.readAsDataURL(file);
+  });
+}
+
 function App() {
-  const [images, setImages] = useState(mockImages);
+  const [images, setImages] = useState(() =>
+    getInitialState(STORAGE_KEYS.images, mockImages),
+  );
   const [searchText, setSearchText] = useState("");
-  const [designerNotes, setDesignerNotes] = useState({});
-  const [designerTags, setDesignerTags] = useState({});
+  const [designerNotes, setDesignerNotes] = useState(() =>
+    getInitialState(STORAGE_KEYS.notes, {}),
+  );
+  const [designerTags, setDesignerTags] = useState(() =>
+    getInitialState(STORAGE_KEYS.tags, {}),
+  );
+  const [isClassifying, setIsClassifying] = useState(false);
   const [filters, setFilters] = useState({
     garmentType: "",
     style: "",
+    material: "",
+    colorPalette: "",
+    pattern: "",
+    consumerProfile: "",
+    trendNotes: "",
     continent: "",
     country: "",
     city: "",
     occasion: "",
+    year: "",
+    month: "",
     seasonCaptured: "",
     designer: "",
   });
@@ -27,7 +69,13 @@ function App() {
         ...new Set(
           images
             .map((item) => config.getValue(item))
-            .filter((value) => value && value.trim() !== ""),
+            .filter(
+              (value) =>
+                value !== undefined &&
+                value !== null &&
+                String(value).trim() !== "",
+            )
+            .map((value) => String(value)),
         ),
       ].sort();
     });
@@ -56,70 +104,83 @@ function App() {
     }));
   };
 
-  const handleImageUpload = (event) => {
+  const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files || []);
 
     if (files.length === 0) {
       return;
     }
-
-    const newImages = files.map((file, index) => ({
-      id: Date.now() + index,
-      imageUrl: URL.createObjectURL(file),
-      originalFileName: file.name,
-      description: `Uploaded image: ${file.name}`,
-      garmentType: "Unknown",
-      style: "Unknown",
-      material: "Unknown",
-      colorPalette: "Unknown",
-      pattern: "Unknown",
-      season: "Unknown",
-      occasion: "Unknown",
-      consumerProfile: "Unknown",
-      trendNotes: "Pending AI classification",
-      location: {
-        continent: "Unknown",
-        country: "Unknown",
-        city: "Unknown",
-      },
-      time: {
-        year: new Date().getFullYear(),
-        month: "Unknown",
-        seasonCaptured: "Unknown",
-      },
-      designer: "Current User",
-      annotations: [],
-    }));
-
+    const now = Date.now();
+    const newImages = await Promise.all(
+      files.map(async (file, index) => {
+        const imageUrl = await fileToDataUrl(file);
+        return {
+          id: now + index,
+          imageUrl,
+          originalFileName: file.name,
+          description: `Uploaded image awaiting AI classification: ${file.name}`,
+          garmentType: "Unknown",
+          style: "Unknown",
+          material: "Unknown",
+          colorPalette: "Unknown",
+          pattern: "Unknown",
+          season: "Unknown",
+          occasion: "Unknown",
+          consumerProfile: "Unknown",
+          trendNotes: "Pending AI classification",
+          location: {
+            continent: "Unknown",
+            country: "Unknown",
+            city: "Unknown",
+          },
+          time: {
+            year: new Date().getFullYear(),
+            month: "Unknown",
+            seasonCaptured: "Unknown",
+          },
+          designer: "Current User",
+          annotations: [],
+          classificationSource: "not-run",
+        };
+      }),
+    );
     setImages((prev) => [...newImages, ...prev]);
     event.target.value = "";
   };
 
-  const handleRunDemoClassification = () => {
-    setImages((prev) =>
-      prev.map((item) => {
+  const handleRunDemoClassification = async () => {
+    setIsClassifying(true);
+    const nextImages = await Promise.all(
+      images.map(async (item) => {
         if (item.garmentType !== "Unknown") {
           return item;
         }
-
-        const result = classifyImageFromName(item.originalFileName || "");
-
+        const result = await classifyImage(item.originalFileName || "");
         return {
           ...item,
           ...result,
         };
       }),
     );
+    setImages(nextImages);
+    setIsClassifying(false);
   };
 
   const clearAllFilters = () => {
     setFilters({
       garmentType: "",
       style: "",
+      material: "",
+      colorPalette: "",
+      pattern: "",
+      consumerProfile: "",
+      trendNotes: "",
       continent: "",
       country: "",
       city: "",
       occasion: "",
+      year: "",
+      month: "",
       seasonCaptured: "",
       designer: "",
     });
@@ -135,6 +196,22 @@ function App() {
       designerTags,
     );
   }, [images, filters, searchText, designerNotes, designerTags]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.images, JSON.stringify(images));
+  }, [images]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      STORAGE_KEYS.notes,
+      JSON.stringify(designerNotes),
+    );
+  }, [designerNotes]);
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEYS.tags, JSON.stringify(designerTags));
+  }, [designerTags]);
+
   return (
     <div
       style={{
@@ -171,6 +248,7 @@ function App() {
         <div style={{ marginTop: "12px" }}>
           <button
             onClick={handleRunDemoClassification}
+            disabled={isClassifying}
             style={{
               padding: "10px 16px",
               borderRadius: "8px",
@@ -179,13 +257,16 @@ function App() {
               marginRight: "12px",
             }}
           >
-            Run Demo AI Classification
+            {isClassifying
+              ? "Classifying Uploaded Images..."
+              : "Run Demo AI Classification"}
           </button>
         </div>
 
         <p style={{ marginTop: "8px" }}>
-          Uploaded images will appear in the library with placeholder metadata.
-          Click the button to auto-fill metadata from filename keywords.
+          Uploaded images are persisted in local storage. Classification uses a
+          parser + local mock multimodal fallback, and can be replaced with a
+          real multimodal API later.
         </p>
       </section>
 
