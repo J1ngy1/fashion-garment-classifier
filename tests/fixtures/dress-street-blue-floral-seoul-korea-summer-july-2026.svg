@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#4f7cff" />
+  <circle cx="60" cy="60" r="30" fill="#fef08a" />
+  <text x="10" y="112" font-size="10" fill="#ffffff">fashion test fixture</text>
+</svg>
