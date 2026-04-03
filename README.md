@@ -42,7 +42,7 @@ Open the URL printed by Vite (typically `http://127.0.0.1:5173`).
 
 5. **Evaluation (`npm run eval`)**: The script `eval/run-evaluation.mjs` loads `GEMINI_API_KEY` from the environment or from `app/.env` (without printing the key). For each row in `eval/labeled-test-set.json`, if a file exists at `eval/images/<basename>` and the key is set, that sample is classified with **Gemini + image**; otherwise it uses the **filename mock**. The shipped `eval/images/gemini-smoke.png` is a smoke test (excluded from accuracy so trivial image output does not skew metrics). Add more images matching the dataset basenames for a full multimodal benchmark.
 
-6. **Free tier**: Gemini API usage may be subject to [rate limits and quotas](https://ai.google.dev/pricing); free-tier caps may apply.
+6. **Free tier**: Gemini API usage may be subject to [rate limits and quotas](https://ai.google.dev/pricing); free-tier caps may apply. **The app defaults to mock classification to avoid costs during development.**
 
 7. **Security note**: The key is loaded in the browser bundle for this local demo. For production, call Gemini from a backend and keep keys server-side. The eval script only reads the key server-side from `app/.env`; it never logs the secret.
 
@@ -50,9 +50,9 @@ Open the URL printed by Vite (typically `http://127.0.0.1:5173`).
 
 The app uses two model names in `app/src/utils/classifyImage.js` only:
 
-| Role | Model ID |
-|------|----------|
-| Primary | `gemini-2.5-flash` |
+| Role                        | Model ID           |
+| --------------------------- | ------------------ |
+| Primary                     | `gemini-2.5-flash` |
 | Fallback (if primary fails) | `gemini-2.0-flash` |
 
 These match the [current Gemini API model list](https://ai.google.dev/gemini-api/docs/models/gemini) for the Developer API. Older names (`gemini-1.5-flash` without a version, etc.) often return **404** for newer projects; **429** means [quota / rate](https://ai.google.dev/gemini-api/docs/rate-limits) — wait and retry, or switch to a paid tier in Google AI Studio.
@@ -72,7 +72,24 @@ npm run test:e2e
 npm run eval
 ```
 
-This generates `eval/reports/latest-report.json`. With `GEMINI_API_KEY` in `app/.env` and image files under `eval/images/`, samples that have a matching file use **Gemini multimodal** classification; others use the **filename mock**. See `eval/EVALUATION_SUMMARY.md`.
+This generates `eval/reports/latest-report.json`. **By default, evaluation uses the local mock classifier** to avoid API costs and ensure fast, deterministic results during development and testing. The mock provides filename-token based inference without requiring real images or API calls.
+
+To enable real Gemini multimodal evaluation:
+
+1. Set `GEMINI_API_KEY` in `app/.env`
+2. Place image files under `eval/images/` whose basenames match entries in `eval/labeled-test-set.json`
+3. Run `npm run eval` — samples with matching images will use Gemini vision classification
+
+**Note**: The current evaluation setup intentionally uses the mock by default to:
+
+- **Save costs**: Avoid Gemini API charges during frequent testing and CI runs
+- **Ensure speed**: Mock classification is instant vs. API round-trips
+- **Provide determinism**: Consistent results across runs without network dependencies
+- **Enable offline evaluation**: No internet required for basic functionality testing
+
+Only the included `eval/images/gemini-smoke.png` (a minimal smoke test) triggers real API calls when the key is configured. For full multimodal benchmarking, add real garment images to `eval/images/`.
+
+See `eval/EVALUATION_SUMMARY.md` and `eval/reports/latest-report.json`.
 
 **Debug Gemini from the CLI:** `node eval/try-gemini-once.mjs` (prints `classificationSource` and one field; never prints the key). **Verbose eval** (why a row fell back to mock): set `EVAL_VERBOSE=1` when running `npm run eval` (same shell as your package manager).
 
@@ -101,6 +118,7 @@ This generates `eval/reports/latest-report.json`. With `GEMINI_API_KEY` in `app/
 - Dataset scaffold: `eval/labeled-test-set.json` with **50 labeled samples** (within required 50-100 range).
 - Script: `eval/run-evaluation.mjs` (loads `app/.env` for `GEMINI_API_KEY`, never prints secrets).
 - Report: per-attribute accuracy for garment type, style, material, color palette, pattern, occasion, and location context; plus `geminiSuccessCount` vs mock/fallback counts.
+- **Default behavior**: Uses local mock classification to avoid API costs and ensure fast evaluation. Only enables Gemini multimodal when both API key and matching image files are present.
 - **Gemini**: Rows with a matching file in `eval/images/` and a valid API key run vision classification; the repo includes `eval/images/gemini-smoke.png` for a connectivity smoke test (excluded from accuracy).
 - **Mock**: Rows without an on-disk image or without a key use filename-token inference.
 
@@ -114,8 +132,8 @@ See `eval/EVALUATION_SUMMARY.md` and `eval/reports/latest-report.json`.
 
 ## Trade-offs
 
-- Pros: minimal setup, deterministic outputs, fast test/eval loop, easy to replace classifier backend later.
-- Cons: mock classifier is not true vision understanding and can overfit to filename quality.
+- Pros: minimal setup, deterministic outputs, fast test/eval loop, easy to replace classifier backend later. **Mock evaluation avoids API costs and provides instant feedback during development.**
+- Cons: mock classifier is not true vision understanding and can overfit to filename quality. **Real multimodal evaluation requires API keys and image files, adding cost and complexity.**
 - Local storage is simple but not multi-user and not suitable for large-scale production datasets.
 
 ## Limitations
