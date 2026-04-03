@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-04-03T14:19:37.034Z",
+  "sampleCount": 50,
+  "accuracy": {
+    "garmentType": 100,
+    "style": 100,
+    "material": 100,
+    "colorPalette": 100,
+    "pattern": 100,
+    "occasion": 100,
+    "locationContext": 100
+  },
+  "totals": {
+    "garmentType": 50,
+    "style": 50,
+    "material": 50,
+    "colorPalette": 50,
+    "pattern": 50,
+    "occasion": 50,
+    "locationContext": 50
+  },
+  "correct": {
+    "garmentType": 50,
+    "style": 50,
+    "material": 50,
+    "colorPalette": 50,
+    "pattern": 50,
+    "occasion": 50,
+    "locationContext": 50
+  },
+  "errorCount": 0,
+  "sampleErrors": [],
+  "notes": [
+    "This evaluation uses local mock multimodal classification based on filename tokens.",
+    "Replace classifyImage() internals with a real multimodal API call for production-grade metrics."
+  ]
+}
